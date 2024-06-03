@@ -1,0 +1,58 @@
+.signup-container {
+    max-width: 500px;
+    margin: auto;
+}
+
+.signup-container h2 {
+    font-weight: bold;
+}
+
+.signup-container .form-control {
+    font-size: 1.2rem;
+    padding: 0.75rem 1.25rem;
+    width: 100%;
+}
+
+.signup-container .form-label {
+    font-weight: bold;
+}
+
+.signup-container .form-check-label {
+    font-size: 1.1rem;
+    margin-left: 0.5rem;
+}
+
+.signup-container .btn {
+    font-size: 1.2rem;
+    padding: 0.75rem;
+}
+
+.signup-container .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.signup-container .form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.signup-container .role-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.signup-container .btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background-color: #4CAF50;
+    border: none;
+    transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.signup-container .btn:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+}

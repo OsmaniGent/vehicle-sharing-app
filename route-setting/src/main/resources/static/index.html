@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='utf-8' />
+    <title>Getting started with the Mapbox Directions API</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css' rel='stylesheet' />
+    <script
+        src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js'></script>
+    <link rel='stylesheet'
+        href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.css'
+        type='text/css' />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 100px;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #instructions {
+            position: absolute;
+            margin-top: 100px;
+            width: 25%;
+            top: 0;
+            bottom: 20%;
+            padding: 20px;
+            background-color: #fff;
+            overflow-y: scroll;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="a">
+        <label for="startLat">Start Latitude:</label>
+        <input type="text" id="startLat" placeholder="Latitude">
+        <label for="startLng">Start Longitude:</label>
+        <input type="text" id="startLng" placeholder="Longitude">
+
+        <label for="endLat">End Latitude:</label>
+        <input type="text" id="endLat" placeholder="Latitude">
+        <label for="endLng">End Longitude:</label>
+        <input type="text" id="endLng" placeholder="Longitude">
+
+        <label for="passengersAllowed">Passengers Allowed:</label>
+        <input type="checkbox" id="passengersAllowed" onclick="togglePassengerDropdown()">
+        <div id="passengerSelect" style="display: none;">
+            <label for="passengerNumber">Number of Passengers:</label>
+            <select id="passengerNumber">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
+        </div>
+
+        <label for="cost">Cost:</label>
+        <input type="text" id="cost" placeholder="Cost">
+
+
+        <label for="timer">How Long To Stay Open (minutes):</label>
+        <input type="number" id="timer" placeholder="Minutes">
+
+        <label for="startDate">Date and Time of trip:</label>
+        <input type="datetime-local" id="startDate" name="startDate" value="2024-04-26T12:00">
+
+
+        <button onclick="getFuelCost()">Get Fuel Cost</button>
+
+
+
+        <button onclick="submitRouteRequest(), centerMapToStart()">Get Route</button>
+        <button onclick="addRoute()">Add Route</button>
+
+        <div id='geocoder-start' class='geocoder'></div>
+        <div id='geocoder-end' class='geocoder'></div>
+
+
+
+
+        <div id='map'></div>
+        <div id="instructions"></div>
+
+    </div>
+
+    <script>
+
+        var routeData;
+
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZ2VudG9zbWFuaSIsImEiOiJjbHJ6ZDB6NmQxaWtuMmpteDVodnd0NzRwIn0.Ol6l6RCXj1_pKA6-JcYbkg';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [-84.518641, 39.134270],
+            zoom: 12
+        });
+
+        const bounds = [
+            [-180.0, -90.0],
+            [180.0, 90.0]
+        ];
+        map.setMaxBounds(bounds);
+
+        const start = [-122.662323, 45.523751];
+
+
+        function togglePassengerDropdown() {
+            var checkBox = document.getElementById("passengersAllowed");
+            var passengerSelect = document.getElementById("passengerSelect");
+            if (checkBox.checked == true) {
+                passengerSelect.setAttribute('selected', 'true');
+                passengerSelect.style.display = "block";
+            } else {
+                passengerSelect.style.display = "none";
+            }
+        }
+
+
+
+        function submitRouteRequest() {
+
+            var startLat = document.getElementById('startLat').value;
+            var startLng = document.getElementById('startLng').value;
+            var endLat = document.getElementById('endLat').value;
+            var endLng = document.getElementById('endLng').value;
+
+
+
+            if (!startLat || !startLng || !endLat || !endLng) {
+                console.error("Please enter both start and end coordinates.");
+                return;
+            }
+
+            var start = [startLng, startLat];
+            var end = [endLng, endLat];
+
+            getRoute(start, end);
+        }
+
+        function displayRoutesOnMap(routes) {
+            routes.forEach((route, index) => {
+                var routeId = `route-${index}`;
+
+                var geojson = {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: route.geometry
+                };
+
+                if (map.getLayer(routeId)) {
+                    map.getSource(routeId).setData(geojson);
+                } else {
+                    map.addLayer({
+                        id: routeId,
+                        type: 'line',
+                        source: {
+                            type: 'geojson',
+                            data: geojson
+                        },
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': ['#3887be', '#ff8888', '#88cc88'][index % 3],
+                            'line-width': 5,
+                            'line-opacity': 0.75
+                        }
+                    });
+                }
+            });
+        }
+
+        function getRoute(start, end) {
+            var startCoords = start.join(',');
+            var endCoords = end.join(',');
+
+            var maxTime = 1000;
+            var driverCost = document.getElementById('cost').value;
+
+
+
+            if (document.getElementById('passengersAllowed').checked) {
+                var passengerCount = document.getElementById('passengerNumber').value;
+            }
+
+            var timerValue = parseInt(document.getElementById('timer').value);
+            var expiryTime = new Date(new Date().getTime() + timerValue * 60000);
+
+            var startDate = document.getElementById('startDate').value;
+
+            // var url = `http://localhost:8765/ROUTE-SETTING/route/generate?type=driving&start=${startCoords}&end=${endCoords}`;
+            var url = `http://localhost:8081/route/generate?type=driving&start=${startCoords}&end=${endCoords}`;
+
+            // if (stops && typeof stops === 'string' && stops.trim().length > 0) {
+            //     var stopsParam = stops.split(';').join(';');
+            //     // url = `http://localhost:8765/ROUTE-SETTING/route/generate?type=driving&start=${startCoords}&stops=${stopsParam}&end=${endCoords}`;
+            //     url = `http://localhost:8081/route/generate?type=driving&start=${startCoords}&stops=${stopsParam}&end=${endCoords}`;
+            // }
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function (response) {
+                    console.log("Complete route data from backend:", response);
+                    displayRoutesOnMap(response.routes);
+                    displayRouteDetails(response);
+
+                    routeData = {
+                        driverId: "66280cf6ef9d66ac8eb58a78",
+                        geometry: {
+                            type: "LineString",
+                            coordinates: response.routes[0].geometry.coordinates
+                        },
+                        duration: response.routes[0].duration,
+                        distance: response.routes[0].distance,
+                        seatsAvailable: passengerCount,
+                        maxStopTime: maxTime,
+                        cost: driverCost,
+                        expiry: expiryTime,
+                        isOpen: true,
+                        routeDate: startDate
+                    };
+                },
+                error: function (error) {
+                    console.error("Error fetching route: ", error);
+                }
+            });
+        }
+
+
+        function addRoute() {
+
+
+            var url = `http://localhost:8765/ROUTE-FILTERING/filter/add`;
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(routeData),
+                success: function (response) {
+                    console.log("Route Added Sucessfully: ", response);
+                },
+                error: function (error) {
+                    console.error("Error adding route: ", error);
+                }
+            });
+        }
+
+        function createCalendarEvent() {
+
+            var url = `http://localhost:8765/USER/calendar/addEvent`;
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                contentType: 'application/json',
+                success: function (response) {
+                    console.log("Calendar event created: " + response);
+                },
+                error: function (error) {
+                    console.error("Error adding new event: ", error);
+                }
+            });
+
+        }
+
+        function getFuelCost() {
+
+            var driverCost = document.getElementById('cost');
+
+            var year = 2012;
+            var make = "Honda";
+            var model = "Fit";
+
+            var url = `http://localhost:8765/VEHICLE-FUEL/vehicles/mpg?year=${year}&make=${make}&model=${model}`;
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function (response) {
+
+                    console.log(response);
+                    driverCost.value = ((response.avgMpg / 2.352) * (routeData.distance / 1000) / 100) * 1, 983;
+                    routeData.cost = driverCost.value
+
+                },
+                error: function (error) {
+                    console.error("Error fetching route: ", error);
+                }
+            });
+
+        }
+
+
+        function displayRouteDetails(routeData) {
+            var instructionsElement = document.getElementById('instructions');
+            instructionsElement.innerHTML = '';
+
+            if (routeData.routes && routeData.routes.length > 0) {
+                var firstRoute = routeData.routes[0];
+                instructionsElement.innerHTML += `Duration: ${Math.floor(firstRoute.duration / 60)} minutes<br>`;
+                instructionsElement.innerHTML += `Distance: ${Math.floor(firstRoute.distance / 1000)} km<br>`;
+            }
+        }
+
+
+        function displayRouteOnMap(route) {
+            var geojson = {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'LineString',
+                    coordinates: route
+                }
+            };
+
+            if (map.getSource('route')) {
+                map.getSource('route').setData(geojson);
+            } else {
+                map.addLayer({
+                    id: 'route',
+                    type: 'line',
+                    source: {
+                        type: 'geojson',
+                        data: geojson
+                    },
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': '#3887be',
+                        'line-width': 5,
+                        'line-opacity': 0.75
+                    }
+                });
+            }
+        }
+
+        map.on('load', () => {
+            let startPointSet = false;
+            let endPointSet = false;
+            let startCoordinates;
+            let endCoordinates;
+
+            map.on('click', (event) => {
+                const coords = [event.lngLat.lng, event.lngLat.lat];
+
+                if (!startPointSet) {
+                    startCoordinates = coords;
+                    startPointSet = true;
+
+                    if (map.getLayer('start-point')) {
+                        map.getSource('start-point').setData({
+                            type: 'FeatureCollection',
+                            features: [{
+                                type: 'Feature',
+                                properties: {},
+                                geometry: {
+                                    type: 'Point',
+                                    coordinates: startCoordinates
+                                }
+                            }]
+                        });
+                    } else {
+                        map.addLayer({
+                            id: 'start-point',
+                            type: 'circle',
+                            source: {
+                                type: 'geojson',
+                                data: {
+                                    type: 'FeatureCollection',
+                                    features: [{
+                                        type: 'Feature',
+                                        properties: {},
+                                        geometry: {
+                                            type: 'Point',
+                                            coordinates: startCoordinates
+                                        }
+                                    }]
+                                }
+                            },
+                            paint: {
+                                'circle-radius': 10,
+                                'circle-color': '#3887be'
+                            }
+                        });
+                    }
+
+                    console.log("Start position set at: ", startCoordinates);
+                } else if (!endPointSet && startPointSet) {
+                    endCoordinates = coords;
+                    endPointSet = true;
+
+                    if (map.getLayer('end-point')) {
+                        map.getSource('end-point').setData({
+                            type: 'FeatureCollection',
+                            features: [{
+                                type: 'Feature',
+                                properties: {},
+                                geometry: {
+                                    type: 'Point',
+                                    coordinates: endCoordinates
+                                }
+                            }]
+                        });
+                    } else {
+                        map.addLayer({
+                            id: 'end-point',
+                            type: 'circle',
+                            source: {
+                                type: 'geojson',
+                                data: {
+                                    type: 'FeatureCollection',
+                                    features: [{
+                                        type: 'Feature',
+                                        properties: {},
+                                        geometry: {
+                                            type: 'Point',
+                                            coordinates: endCoordinates
+                                        }
+                                    }]
+                                }
+                            },
+                            paint: {
+                                'circle-radius': 10,
+                                'circle-color': '#f30'
+                            }
+                        });
+                    }
+
+                    console.log("End position set at: ", endCoordinates);
+
+                    if (startCoordinates && endCoordinates) {
+                        getRoute(startCoordinates, endCoordinates);
+                        startPointSet = false;
+                        endPointSet = false;
+                    }
+                }
+            });
+        });
+
+
+        function centerMapToStart() {
+            var startLat = parseFloat(document.getElementById('startLat').value);
+            var startLng = parseFloat(document.getElementById('startLng').value);
+
+            if (isNaN(startLat) || isNaN(startLng)) {
+                alert("Please enter valid start coordinates.");
+                return;
+            }
+
+            map.flyTo({
+                center: [startLng, startLat],
+                essential: true
+            });
+        }
+
+        const geocoder = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            marker: true
+        });
+
+        map.addControl(geocoder);
+
+        var startCoordinates, endCoordinates;
+
+        var geocoderStart = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            placeholder: 'Enter start location'
+        });
+
+        var geocoderEnd = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            placeholder: 'Enter end location'
+        });
+
+        document.getElementById('geocoder-start').appendChild(geocoderStart.onAdd(map));
+        document.getElementById('geocoder-end').appendChild(geocoderEnd.onAdd(map));
+
+        geocoderStart.on('result', function (e) {
+            var placeName = e.result.place_name;
+            getCoordinatesFromBackend(placeName, 'start');
+        });
+
+        geocoderEnd.on('result', function (e) {
+            var placeName = e.result.place_name;
+            getCoordinatesFromBackend(placeName, 'end');
+        });
+
+        function getCoordinatesFromBackend(placeName, type) {
+            let names = placeName.split(',');
+            names = names.map(name => name.trim());
+            var namePlace = names[0] + '.json';
+
+            $.ajax({
+                // url: `http://localhost:8765/ROUTE-SETTING/route/translate?place=${namePlace}`,
+                url: `http://localhost:8081/route/translate?place=${namePlace}`,
+                method: 'GET',
+                success: function (response) {
+                    var data = response;
+                    if (data.features && data.features.length > 0) {
+                        var coordinates = data.features[0].center;
+                        if (type === 'start') {
+                            startCoordinates = coordinates;
+                        } else {
+                            endCoordinates = coordinates;
+                        }
+                        console.log(startCoordinates + " AAA " + endCoordinates)
+                        if (startCoordinates && endCoordinates) {
+                            getRoute(startCoordinates, endCoordinates);
+                        }
+                    }
+                },
+                error: function (error) {
+                    console.error("Error fetching coordinates: ", error);
+                }
+            });
+        }
+
+
+    </script>
+</body>
+
+</html>

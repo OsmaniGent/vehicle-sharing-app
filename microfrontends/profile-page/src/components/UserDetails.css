@@ -1,0 +1,81 @@
+.user-details {
+    text-align: center;
+  }
+  
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  .become-driver-btn {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .become-driver-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .add-car-form {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    animation: slideDown 0.5s ease-in-out;
+  }
+  
+  .add-car-form h3 {
+    margin-bottom: 20px;
+  }
+  
+  .add-car-form div {
+    margin-bottom: 15px;
+  }
+  
+  .add-car-form label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .add-car-form input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .submit-btn {
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .submit-btn:hover {
+    background-color: #218838;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
