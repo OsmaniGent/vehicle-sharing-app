@@ -116,7 +116,11 @@ public class RouteFilterController {
         return ResponseEntity.ok(routeService.segmentIdentifiedCoordinates(identifiedCoordinates));
     }
 
-    
+    @DeleteMapping("/delete/{routeId}")
+    public ResponseEntity<?> deleteRoute(@PathVariable String routeId) {
+        routeService.deleteRoute(routeId);
+        return ResponseEntity.noContent().build();
+    }
 
     
 }

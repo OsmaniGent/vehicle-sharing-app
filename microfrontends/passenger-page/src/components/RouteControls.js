@@ -1,11 +1,17 @@
 import React, { useEffect } from 'react';
 
-const RouteControls = ({ currentSelectedRouteId, sendStop }) => {
+const RouteControls = ({ currentSelectedRouteId, sendStop, onStopAdded }) => {
     const handleAddStop = () => {
         if (currentSelectedRouteId) {
-            sendStop(currentSelectedRouteId);
+            sendStop(currentSelectedRouteId)
+                .then(() => {
+                    onStopAdded('Stop added successfully.');
+                })
+                .catch(() => {
+                    alert('Failed to add stop. Please try again.');
+                });
         } else {
-            alert("Please select a route first.");
+            alert('Please select a stop first.');
         }
     };
 
@@ -13,7 +19,7 @@ const RouteControls = ({ currentSelectedRouteId, sendStop }) => {
         const stopType = document.getElementById('stopType').value;
         const pickupInput = document.getElementById('pickupCoordinatesInput');
         const dropoffInput = document.getElementById('dropoffCoordinatesInput');
-        
+
         if (stopType === 'pickUp') {
             pickupInput.style.display = 'block';
             dropoffInput.style.display = 'none';

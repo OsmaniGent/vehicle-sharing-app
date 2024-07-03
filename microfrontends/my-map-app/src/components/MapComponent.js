@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
 import { fetchRoute } from '../api';
+import './Map.css';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZ2VudG9zbWFuaSIsImEiOiJjbHJ6ZDB6NmQxaWtuMmpteDVodnd0NzRwIn0.Ol6l6RCXj1_pKA6-JcYbkg';
 
@@ -91,7 +92,7 @@ const MapComponent = ({ onSetStart, onSetEnd, routeData, onGeocoderResult }) => 
 
                 if (startMarkerRef.current) {
                     const startCoords = startMarkerRef.current.getLngLat().toArray();
-                    fetchRoute(startCoords, coords).then((route) => {
+                    await fetchRoute(startCoords, coords).then((route) => {
                         drawRoute(route);
                     });
                 }

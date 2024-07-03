@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pending-route
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pending-route
+  template:
+    metadata:
+      labels:
+        app: pending-route
+    spec:
+      containers:
+      - name: pending-route
+        image: gentosmani/m-pending-route:2.1.3
+        ports:
+        - containerPort: 3003

@@ -1,8 +1,37 @@
 import axios from 'axios';
+import { setToken, getToken } from './utils/auth';
+
+
+const axiosInstance = axios.create({
+  withCredentials: true,
+});
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export const getUserDetails = async (userId) => {
   try {
-    const response = await axios.get(`http://localhost:8765/USER/user/user-details/${userId}`);
+    const response = await axiosInstance.get(`http://localhost:8765/USER/user/user-details-username/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user details: ", error);
+    throw error;
+  }
+};
+
+export const changeRole= async (userId) => {
+  try {
+    const response = await axiosInstance.get(`http://localhost:8765/USER/user/changeRole/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching user details: ", error);
@@ -12,7 +41,7 @@ export const getUserDetails = async (userId) => {
 
 export const addCarForUser = async (carDetails) => {
   try {
-    const response = await axios.post(`http://localhost:8765/USER/car/addCar`, carDetails);
+    const response = await axiosInstance.post(`http://localhost:8765/USER/car/addCar`, carDetails);
     return response.data;
   } catch (error) {
     console.error("Error adding car: ", error);
@@ -22,7 +51,7 @@ export const addCarForUser = async (carDetails) => {
 
 export const getYears = async () => {
   try {
-    const response = await axios.get('http://localhost:8765/VEHICLE-FUEL/vehicles/years');
+    const response = await axiosInstance.get('http://localhost:8765/VEHICLE-FUEL/vehicles/years');
     return response.data;
   } catch (error) {
     console.error("Error fetching years: ", error);
@@ -32,7 +61,7 @@ export const getYears = async () => {
 
 export const getMakes = async (year) => {
   try {
-    const response = await axios.get(`http://localhost:8765/VEHICLE-FUEL/vehicles/makes?year=${year}`);
+    const response = await axiosInstance.get(`http://localhost:8765/VEHICLE-FUEL/vehicles/makes?year=${year}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching makes: ", error);
@@ -42,7 +71,7 @@ export const getMakes = async (year) => {
 
 export const getModels = async (year, make) => {
   try {
-    const response = await axios.get(`http://localhost:8765/VEHICLE-FUEL/vehicles/models?year=${year}&make=${make}`);
+    const response = await axiosInstance.get(`http://localhost:8765/VEHICLE-FUEL/vehicles/models?year=${year}&make=${make}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching models: ", error);

@@ -3,6 +3,7 @@ import { Button } from 'react-bootstrap';
 import MapComponent from './components/MapComponent';
 import ReviewComponent from './components/ReviewComponent';
 import NavbarComponent from './components/NavbarComponent';
+import withAuth from './components/withAuth';
 import './App.css';
 
 const App = () => {

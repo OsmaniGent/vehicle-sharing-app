@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: route-setting
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: route-setting
+  template:
+    metadata:
+      labels:
+        app: route-setting
+    spec:
+      containers:
+      - name: route-setting
+        image: gentosmani/m-demo:0.0.1-SNAPSHOT
+        resources:
+          limits:
+            memory: "700Mi"
+        ports:
+        - containerPort: 8081
+        env:
+        - name: EUREKA.CLIENT.SERVICEURL.DEFAULTZONE
+          value: http://naming-server:8761/eureka

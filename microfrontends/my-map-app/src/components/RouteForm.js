@@ -1,9 +1,16 @@
 import React from 'react';
 import { Form, Button, InputGroup, FormControl } from 'react-bootstrap';
 
-const RouteForm = ({ formData, onFieldChange, onSubmit, onCalculateFuelCost, loading }) => {
+const RouteForm = ({ formData, onFieldChange, onSubmit, onCalculateFuelCost, loading, seatsAvailable }) => {
     const togglePassengerDropdown = () => {
         onFieldChange('passengersAllowed', !formData.passengersAllowed);
+    };
+
+    const renderPassengerOptions = () => {
+        const numberOfOptions = seatsAvailable > 0 ? seatsAvailable : 1;
+        return Array.from({ length: numberOfOptions }, (_, i) => i + 1).map(number => (
+            <option key={number} value={number}>{number}</option>
+        ));
     };
 
     return (
@@ -56,10 +63,7 @@ const RouteForm = ({ formData, onFieldChange, onSubmit, onCalculateFuelCost, loa
                         value={formData.passengerNumber}
                         onChange={e => onFieldChange('passengerNumber', e.target.value)}
                     >
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
+                        {renderPassengerOptions()}
                     </FormControl>
                 </InputGroup>
             )}

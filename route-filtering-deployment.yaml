@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: route-filtering
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: route-filtering
+  template:
+    metadata:
+      labels:
+        app: route-filtering
+    spec:
+      containers:
+      - name: route-filtering
+        image: gentosmani/m-route-filtering:0.0.4-SNAPSHOT
+        resources:
+          limits:
+            memory: "1000Mi"
+          requests:
+            memory: "1000Mi" 
+        ports:
+        - containerPort: 8181
+        env:
+        - name: EUREKA.CLIENT.SERVICEURL.DEFAULTZONE
+          value: http://naming-server:8761/eureka
+        - name: SPRING_DATA_MONGODB_URI
+          value: mongodb://mongo:27017/mydb
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /vehicle-sharing-web-fda3571fcf2a.json
+        volumeMounts:
+        - name: credentials
+          mountPath: /vehicle-sharing-web-fda3571fcf2a.json
+          subPath: vehicle-sharing-web-fda3571fcf2a.json
+      volumes:
+      - name: credentials
+        secret:
+          secretName: google-credentials

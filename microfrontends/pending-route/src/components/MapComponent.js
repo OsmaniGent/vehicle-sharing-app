@@ -2,11 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import './MapComponent.css';
 
+mapboxgl.accessToken = 'pk.eyJ1IjoiZ2VudG9zbWFuaSIsImEiOiJjbHJ6ZDB6NmQxaWtuMmpteDVodnd0NzRwIn0.Ol6l6RCXj1_pKA6-JcYbkg';
+
 const MapComponent = ({ route, index, onRouteSelect, isSelected }) => {
   const mapContainer = useRef(null);
 
   useEffect(() => {
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZ2VudG9zbWFuaSIsImEiOiJjbHJ6ZDB6NmQxaWtuMmpteDVodnd0NzRwIn0.Ol6l6RCXj1_pKA6-JcYbkg';
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
@@ -37,9 +38,49 @@ const MapComponent = ({ route, index, onRouteSelect, isSelected }) => {
           'line-width': 5
         }
       });
+
+      // Add markers for stops
+      const markersData = {
+        'type': 'FeatureCollection',
+        'features': route.stops.map((stop) => ({
+          'type': 'Feature',
+          'properties': {
+            'type': stop.type === 'Pick Up' ? 'pickupMarker' : 'dropoffMarker'
+          },
+          'geometry': {
+            'type': 'Point',
+            'coordinates': stop.coordinates
+          }
+        }))
+      };
+
+      map.addSource('markers', {
+        'type': 'geojson',
+        'data': markersData
+      });
+
+      map.addLayer({
+        'id': 'markers',
+        'type': 'circle',
+        'source': 'markers',
+        'paint': {
+          'circle-radius': 6,
+          'circle-color': [
+            'match',
+            ['get', 'type'],
+            'pickupMarker', 'blue',
+            'dropoffMarker', 'red',
+            /* other */ '#ccc'
+          ]
+        }
+      });
     });
 
-    return () => map.remove();
+    return () => {
+      if (map) {
+        map.remove();
+      }
+    };
   }, [route]);
 
   return (

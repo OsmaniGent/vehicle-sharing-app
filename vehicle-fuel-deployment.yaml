@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle-fuel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vehicle-fuel
+  template:
+    metadata:
+      labels:
+        app: vehicle-fuel
+    spec:
+      containers:
+      - name: vehicle-fuel
+        image: gentosmani/m-vehicle-fuel:0.0.1-SNAPSHOT
+        resources:
+          limits:
+            memory: "700Mi"
+        ports:
+        - containerPort: 8264
+        env:
+        - name: EUREKA.CLIENT.SERVICEURL.DEFAULTZONE
+          value: http://naming-server:8761/eureka

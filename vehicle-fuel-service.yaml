@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehicle-fuel
+spec:
+  selector:
+    app: vehicle-fuel
+  ports:
+    - protocol: TCP
+      port: 8264
+      targetPort: 8264

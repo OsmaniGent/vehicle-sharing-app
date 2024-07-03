@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: route-filtering
+spec:
+  selector:
+    app: route-filtering
+  ports:
+    - protocol: TCP
+      port: 8181
+      targetPort: 8181

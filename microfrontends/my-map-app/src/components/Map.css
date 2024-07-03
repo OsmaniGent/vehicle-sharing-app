@@ -1,0 +1,23 @@
+.geocoder-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.geocoder {
+    width: 100%;
+    max-width: 600px;
+    margin: 5px 0;
+}
+
+@media (min-width: 600px) {
+    .geocoder-container {
+        flex-direction: row;
+        justify-content: space-around;
+    }
+
+    .geocoder {
+        margin: 0 10px;
+    }
+}

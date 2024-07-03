@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { getUserDetails } from '../api';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZ2VudG9zbWFuaSIsImEiOiJjbHJ6ZDB6NmQxaWtuMmpteDVodnd0NzRwIn0.Ol6l6RCXj1_pKA6-JcYbkg';
 
 const MapContainer = ({ route, index, onRouteSelect, isSelected, maps, setMaps, currentSelectedRouteId }) => {
     const mapContainer = useRef(null);
     const [map, setMap] = useState(null);
+    const [user, setUser] = useState(null);
     const [markersData, setMarkersData] = useState({
         'type': 'FeatureCollection',
         'features': []
@@ -94,6 +96,23 @@ const MapContainer = ({ route, index, onRouteSelect, isSelected, maps, setMaps, 
         }
     }, [route, setMaps, currentSelectedRouteId, markersData]);
 
+    useEffect(() => {
+        const fetchUserDetails = async () => {
+          try {
+            console.log('Fetching user details for userId:', route.driverId);
+            if (route.driverId) {
+              const userDetails = await getUserDetails(route.driverId);
+              console.log('User details fetched:', userDetails);
+              setUser(userDetails);
+            }
+          } catch (error) {
+            console.error("Error fetching user details: ", error);
+          }
+        };
+    
+        fetchUserDetails();
+      }, [route.driverId]);
+    
     const addStopToList = (coordinates, route) => {
         const stopType = document.getElementById('stopType').value;
         const clickedPoint = turf.point([coordinates.lng, coordinates.lat]);
@@ -164,7 +183,7 @@ const MapContainer = ({ route, index, onRouteSelect, isSelected, maps, setMaps, 
                 style={{ width: '300px', height: '200px' }}
             />
             <div className="route-info">
-                <p><strong>Driver: </strong>Edon</p>
+                <p><strong>Driver: </strong>{user?.username}</p>
                 <p><strong>Distance:</strong> {route.distance / 1000} km</p>
                 <p><strong>Cost:</strong> ${route.cost}</p>
             </div>

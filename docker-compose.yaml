@@ -1,0 +1,139 @@
+version: '3.7'
+
+services:
+
+  vehicle-fuel:
+    image: gentosmani/m-vehicle-fuel:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8264:8264"
+    networks:
+      - vehicle-network
+    depends_on:
+      - naming-server
+    environment:
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+
+  route-setting:
+    image: gentosmani/m-demo:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8081:8081"
+    networks:
+      - vehicle-network
+    depends_on:
+      - naming-server
+    environment:
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+
+  api-gateway:
+    image: gentosmani/m-api-gateway:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8765:8765"
+    networks:
+      - vehicle-network
+    depends_on:
+      - naming-server
+    environment:
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+
+  route-filtering:
+    image: gentosmani/m-route-filtering:0.0.-4SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8181:8181"
+    networks:
+      - vehicle-network
+    depends_on:
+      - naming-server
+      - mongo
+    environment:
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/mydb
+      GOOGLE_APPLICATION_CREDENTIALS: /vehicle-sharing-web-fda3571fcf2a.json
+    volumes:
+      - ./vehicle-sharing-web-fda3571fcf2a.json:/vehicle-sharing-web-fda3571fcf2a.json
+
+  user-management:
+    image: gentosmani/m-user-management:0.0.3-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8900:8900"
+    networks:
+      - vehicle-network
+    depends_on:
+      - naming-server
+      - mongo
+    environment:
+      EUREKA.CLIENT.SERVICEURL.DEFAULTZONE: http://naming-server:8761/eureka
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/mydb
+      GOOGLE_APPLICATION_CREDENTIALS: /vehicle-sharing-web-fda3571fcf2a.json
+    volumes:
+      - ./vehicle-sharing-web-fda3571fcf2a.json:/vehicle-sharing-web-fda3571fcf2a.json
+
+  naming-server:
+    image: gentosmani/m-naming-server:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports:
+      - "8761:8761"
+    networks:
+      - vehicle-network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - vehicle-network
+    volumes:
+      - mongo-data:/data/db
+
+  auth-app:
+    build: gentosmani/m-auth-app:2.2.3
+    ports:
+      - "3000:3000"  
+    networks:
+      - vehicle-network
+  
+  my-map-app:
+    image: gentosmani/m-my-map-app:2.2.3
+    ports:
+      - "3001:3001"  
+    networks:
+      - vehicle-network
+
+  passenger-page:
+    image: gentosmani/m-passenger-page:2.2.3
+    ports:
+      - "3002:3002"  
+    networks:
+      - vehicle-network
+  
+  pending-route:
+    image: gentosmani/m-pending-route:2.2.3
+    ports:
+      - "3003:3003"  
+    networks:
+      - vehicle-network
+
+  profile-page:
+    image: gentosmani/m-profile-page:2.2.3
+    ports:
+      - "3004:3004"  
+    networks:
+      - vehicle-network
+
+  route-review-app:
+    image: gentosmani/m-route-review-app:2.2.3
+    ports:
+      - "3005:3005"
+    networks:
+      - vehicle-network
+
+networks:
+  vehicle-network:
+
+volumes:
+  mongo-data:

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-management
+  template:
+    metadata:
+      labels:
+        app: user-management
+    spec:
+      containers:
+      - name: user-management
+        image: gentosmani/m-user-management:0.0.3-SNAPSHOT
+        resources:
+          limits:
+            memory: "2Gi"
+          requests:
+            memory: "1Gi" 
+        ports:
+        - containerPort: 8900
+        env:
+        - name: EUREKA.CLIENT.SERVICEURL.DEFAULTZONE
+          value: http://naming-server:8761/eureka
+        - name: SPRING_DATA_MONGODB_URI
+          value: mongodb://mongo:27017/mydb
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /vehicle-sharing-web-fda3571fcf2a.json
+        volumeMounts:
+        - name: credentials
+          mountPath: /vehicle-sharing-web-fda3571fcf2a.json
+          subPath: vehicle-sharing-web-fda3571fcf2a.json
+      volumes:
+      - name: credentials
+        secret:
+          secretName: google-credentials

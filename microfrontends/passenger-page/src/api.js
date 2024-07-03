@@ -1,20 +1,39 @@
 import axios from 'axios';
+import { setToken, getToken, getUserIdFromToken, getUsernameFromToken } from './utils/auth';
+
+
+const axiosInstance = axios.create({
+  withCredentials: true,
+});
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export const getAllRoutes = async () => {
-    const response = await axios.get('http://localhost:8765/ROUTE-FILTERING/filter/allRoutes');
+    const response = await axiosInstance.get('http://localhost:8765/ROUTE-FILTERING/filter/allRoutes');
     return response.data.filter(route => route.isOpen);
 };
 
 export const filterRoutes = async (coordinates) => {
     const url = `http://localhost:8765/ROUTE-FILTERING/filter/near?longitude=${coordinates[0]}&latitude=${coordinates[1]}`;
-    const response = await axios.get(url);
+    const response = await axiosInstance.get(url);
     return response.data.slice(0, 2);
 };
 
 export const sendStop = async (currentSelectedRouteId) => {
     const pickupCoordsInput = document.getElementById('pickupCoordinates');
     const dropoffCoordsInput = document.getElementById('dropoffCoordinates');
-    const passengerId = "6627c56fcd358a22babe5573";
+    const passengerId = await getUserId();
 
     const stops = [];
     if (pickupCoordsInput && pickupCoordsInput.value) {
@@ -34,7 +53,7 @@ export const sendStop = async (currentSelectedRouteId) => {
     const formattedStops = stops.map(s => `${s.coords},${s.passengerId},${s.type}`).join(';');
 
     try {
-        const initialRouteResponse = await axios.get(`http://localhost:8765/ROUTE-FILTERING/filter/details/${currentSelectedRouteId}`);
+        const initialRouteResponse = await axiosInstance.get(`http://localhost:8765/ROUTE-FILTERING/filter/details/${currentSelectedRouteId}`);
         await submitStops(initialRouteResponse.data, formattedStops);
     } catch (error) {
         console.error("Error generating route or sending for filtering:", error);
@@ -52,7 +71,7 @@ export const submitStops = async (initialRoute, stopsParam) => {
 
     var stopsCoordinates = stopsDetails.map(parts => parts[0] + ',' + parts[1]);
 
-    var typeOfStop = stopsDetails.map(parts => parts[2]);
+    var typeOfStop = stopsDetails.map(parts => parts[3]);
 
     console.log("Coordinates:", firstCoordinate, lastCoordinate);
     console.log("Stops Coordinates:", stopsCoordinates);
@@ -81,7 +100,7 @@ export const submitStops = async (initialRoute, stopsParam) => {
 
         const subRouteData = {
             initialRouteId: initialRoute.id,
-            driverId: "driver1",
+            driverId: initialRoute.driverId,
             geometry: {
                 type: "LineString",
                 coordinates: response.data.routes[0].geometry.coordinates
@@ -95,15 +114,15 @@ export const submitStops = async (initialRoute, stopsParam) => {
             isOpen: initialRoute.isOpen,
             routeDate: initialRoute.routeDate,
             stops: stopsDetails.map(parts => ({
-                coordinates: parts[0].split(',').map(Number),
-                passengerId: parts[1],
-                stopType: parts[2]
+                coordinates: [parts[0], parts[1]],
+                passengerId: parts[2],
+                stopType: parts[3]
             }))
         };
 
         const updatedRouteData = {
             initialRouteId: initialRoute.id,
-            driverId: "driver1",
+            driverId: initialRoute.driverId,
             geometry: {
                 type: "LineString",
                 coordinates: initialRoute.geometry.coordinates
@@ -117,9 +136,9 @@ export const submitStops = async (initialRoute, stopsParam) => {
             isOpen: initialRoute.isOpen,
             routeDate: initialRoute.routeDate,
             stops: stopsDetails.map(parts => ({
-                coordinates: parts[0].split(',').map(Number),
-                passengerId: parts[1],
-                stopType: parts[2]
+                coordinates: [parts[0], parts[1]],
+                passengerId: parts[2],
+                stopType: parts[3]
             })),
             identifiedCoordinates: initialRoute.identifiedCoordinates
         };
@@ -142,7 +161,7 @@ export const sendForFiltering = async (initialRoute, newRoute, subRouteData) => 
         subRoute: subRouteData
     };
 
-    await axios.post(url, body, {
+    await axiosInstance.post(url, body, {
         headers: {
             'Content-Type': 'application/json'
         }
@@ -166,4 +185,22 @@ export const toggleStopInputs = () => {
     }
 };
 
+export const getUserDetails = async (userId) => {
+  try {
+    const response = await axiosInstance.get(`http://localhost:8765/USER/user/user-details/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user details: ", error);
+    throw error;
+  }
+};
 
+export const getUserId = async () => {
+    try {
+        const response = await axiosInstance.get(`http://localhost:8765/USER/user/user-details-username/${getUsernameFromToken()}`);
+        return response.data.id;
+      } catch (error) {
+        console.error("Error fetching user details: ", error);
+        throw error;
+      }
+};

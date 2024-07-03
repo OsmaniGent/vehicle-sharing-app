@@ -4,12 +4,16 @@ import MapContainer from './components/MapContainer';
 import RouteControls from './components/RouteControls';
 import Geocoder from './components/Geocoder';
 import NavbarComponent from './components/NavbarComponent';
+import { Alert } from 'react-bootstrap';
+import withAuth from './components/withAuth';
 import './App.css';
 
 const App = () => {
     const [routes, setRoutes] = useState([]);
     const [currentSelectedRouteId, setCurrentSelectedRouteId] = useState(null);
     const [maps, setMaps] = useState({});
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const geocoderContainer = useRef(null);
 
     useEffect(() => {
@@ -25,13 +29,26 @@ const App = () => {
         filterRoutes(coordinates).then(setRoutes);
     };
 
+    const handleStopAdded = (message) => {
+        setSuccess(message);
+        setTimeout(() => {
+            setSuccess('');
+        }, 3000); // Clear success message after 3 seconds
+    };
+
     return (
         <div className="App animated-container">
             <NavbarComponent />
             <div className="main-container">
+                {error && <Alert variant="danger">{error}</Alert>}
+                {success && <Alert variant="success">{success}</Alert>}
                 <h2 className="animated-title">Route Updates</h2>
                 <Geocoder containerRef={geocoderContainer} onResult={handleFilterRoutes} />
-                <RouteControls currentSelectedRouteId={currentSelectedRouteId} sendStop={sendStop} />
+                <RouteControls
+                    currentSelectedRouteId={currentSelectedRouteId}
+                    sendStop={sendStop}
+                    onStopAdded={handleStopAdded}
+                />
                 <div id="mapsContainer" className="maps-container">
                     {routes.length === 0 ? (
                         <p>Loading routes...</p>
@@ -64,4 +81,4 @@ const App = () => {
     );
 };
 
-export default App;
+export default withAuth(App);

@@ -16,6 +16,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<spring-cloud.version>2023.0.0</spring-cloud.version>
+		<docker.image.prefix>gentosmani</docker.image.prefix>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -51,9 +52,9 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-			<version>0.9.1</version>
+			<groupId>jakarta.persistence</groupId>
+			<artifactId>jakarta.persistence-api</artifactId>
+			<version>3.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
@@ -69,6 +70,11 @@
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
 		</dependency> -->
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -120,7 +126,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <image>
-                        <name>noenti/m-${project.artifactId}:${project.version}</name>
+                        <name>gentosmani/m-${project.artifactId}:${project.version}</name>
                     </image>
                     <pullPolicy>IF_NOT_PRESENT</pullPolicy>
                 </configuration>

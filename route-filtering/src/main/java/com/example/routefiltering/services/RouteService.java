@@ -167,4 +167,13 @@ public class RouteService {
 
         return segmentedCoordinates;
     }
+
+    public boolean deleteRoute(String routeId) {
+        if (routeDAO.existsById(routeId)) {
+            routeDAO.deleteById(routeId);
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

@@ -2,14 +2,20 @@ package com.example.routefiltering.utils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import com.example.routefiltering.models.Route;
+import com.example.routefiltering.models.RouteEventDTO;
 import com.example.routefiltering.repositories.RouteRepository;
 import com.example.routefiltering.services.RouteService;
 
@@ -23,6 +29,11 @@ public class RouteExpirationTask {
     @Autowired
     private RouteService routeService;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    private final String googleOauthServiceUrl = "http://api-gateway:8765/USER/api/calendar/create-events";
+
     @Scheduled(fixedRate = 60000)
     public void checkForExpiredRoutes() {
         System.out.println("Checking for expired routes...");
@@ -31,11 +42,24 @@ public class RouteExpirationTask {
         for (Route route : expiredRoutes) {
             if (route.getExpiry().before(now)) {
                 route.setIsOpen(false);
-                // routeService.calculateCostPerSegment(route);
-                // for (int i = 0; i < route.getStops().size(); i++) {
-                //     route.getStops().get(i).getPassengerId();
+                Set<String> passengerIds = route.getStops().stream()
+                                                .map(stop -> stop.getPassengerId())
+                                                .collect(Collectors.toSet());
 
-                // }
+                RouteEventDTO eventDTO = new RouteEventDTO();
+                eventDTO.setRouteId(route.getId());
+                eventDTO.setPassengerIds(List.copyOf(passengerIds));
+                eventDTO.setRouteDate(route.getRouteDate());
+                eventDTO.setDriverId(route.getDriverId());
+
+                try {
+                    ResponseEntity<String> response = restTemplate.postForEntity(googleOauthServiceUrl, eventDTO, String.class);
+                    System.out.println("Response from Google OAuth service: " + response.getBody());
+                } catch (HttpClientErrorException e) {
+                    System.err.println("HTTP error occurred: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 routeRepository.save(route);
             }
         }

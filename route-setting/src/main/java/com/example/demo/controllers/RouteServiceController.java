@@ -1,6 +1,9 @@
 package com.example.demo.controllers;
 
 import com.example.demo.services.RouteService;
+
+import jakarta.annotation.security.RolesAllowed;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +21,7 @@ public class RouteServiceController {
         this.routeService = routeService;
     }
 
+    // @RolesAllowed("DRIVER")
     @GetMapping("/generate")
     public ResponseEntity<String> generateRoute(@RequestParam String type,
                                                 @RequestParam String start, 
@@ -26,11 +30,13 @@ public class RouteServiceController {
         return routeService.generateRoute(type, start, end, stops);
     }
 
+    // @RolesAllowed("DRIVER")
     @GetMapping("/translate")
     public ResponseEntity<String> generateTranslation(@RequestParam String place) throws URISyntaxException {
         return routeService.generateTranslation(place);
     }
 
+    // @RolesAllowed("DRIVER")
     @PostMapping("/send-filter")
     public ResponseEntity<String> sendRouteRequest(@RequestParam String initialRoute,
                                                    @RequestParam String updatedRoute) {

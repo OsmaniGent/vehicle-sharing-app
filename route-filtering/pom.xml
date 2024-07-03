@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.example</groupId>
 	<artifactId>route-filtering</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.-4SNAPSHOT</version>
 	<name>route-filtering</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
@@ -142,6 +142,35 @@
             <version>5.9.2</version>
             <scope>test</scope>
         </dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.persistence</groupId>
+			<artifactId>jakarta.persistence-api</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
 
 	</dependencies>
 	<dependencyManagement>
@@ -167,7 +196,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <image>
-                        <name>noenti/m-${project.artifactId}:${project.version}</name>
+                        <name>gentosmani/m-${project.artifactId}:${project.version}</name>
                     </image>
                     <pullPolicy>IF_NOT_PRESENT</pullPolicy>
                 </configuration>

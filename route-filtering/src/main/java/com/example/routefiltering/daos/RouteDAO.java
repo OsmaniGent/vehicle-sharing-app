@@ -38,4 +38,12 @@ public class RouteDAO {
     public List<Route> findExpiredRoutes(Date currentTime) {
         return routeRepository.findExpiredRoutes(currentTime);
     }
+
+    public boolean existsById(String routeId) {
+        return routeRepository.existsById(routeId);
+    }
+
+    public void deleteById(String routeId) {
+        routeRepository.deleteById(routeId);
+    }
 }

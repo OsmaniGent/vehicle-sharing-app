@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: profile-page
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: profile-page
+  template:
+    metadata:
+      labels:
+        app: profile-page
+    spec:
+      containers:
+      - name: profile-page
+        image: gentosmani/m-profile-page:2.0.6
+        ports:
+        - containerPort: 3004

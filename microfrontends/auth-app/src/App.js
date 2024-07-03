@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { Container, Button } from 'react-bootstrap';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import { isAuthenticated } from './utils/auth';
+import { gapi } from 'gapi-script';
 import './App.css';
 
 const App = () => {
@@ -16,6 +17,16 @@ const App = () => {
         setIsLogin(!isLogin);
         navigate(isLogin ? '/signup' : '/login');
     };
+
+    useEffect(() => {
+        function start() {
+            gapi.client.init({
+                clientId: clientId,
+                scope: ""
+            });
+        }
+        gapi.load('client:auth2', start);
+    }, []);
 
     return (
         <GoogleOAuthProvider clientId={clientId}>

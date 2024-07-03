@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { addCarForUser, getYears, getMakes, getModels, updateUserRole } from '../api';
+import { addCarForUser, getYears, getMakes, getModels, updateUserRole, changeRole } from '../api';
 import './AddCarForm.css';
 
 const AddCarForm = ({ userId, onCarAdded }) => {
@@ -74,7 +74,6 @@ const AddCarForm = ({ userId, onCarAdded }) => {
     try {
       await addCarForUser(carData);
       alert('Car added successfully!');
-      await updateUserRole(userId, 'driver');
       alert('Role updated to driver!');
       onCarAdded();
     } catch (error) {

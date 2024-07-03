@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: passenger-page
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: passenger-page
+  template:
+    metadata:
+      labels:
+        app: passenger-page
+    spec:
+      containers:
+      - name: passenger-page
+        image: gentosmani/m-passenger-page:2.1.3
+        ports:
+        - containerPort: 3002

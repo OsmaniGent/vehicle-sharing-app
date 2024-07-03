@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: route-review-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: route-review-app
+  template:
+    metadata:
+      labels:
+        app: route-review-app
+    spec:
+      containers:
+      - name: route-review-app
+        image: gentosmani/m-route-review-app:2.0.2
+        ports:
+        - containerPort: 3005

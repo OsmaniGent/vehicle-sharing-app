@@ -9,7 +9,7 @@ const Signup = ({ onSignupSuccess }) => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('passenger');
+    const [role, setRole] = useState('PASSENGER');
     const [carDetails, setCarDetails] = useState(null);
     const [message, setMessage] = useState('');
 
@@ -26,9 +26,10 @@ const Signup = ({ onSignupSuccess }) => {
 
         try {
             const response = await addUser(user);
-            const userId = response.id;
+            console.log('User registered:', response);
+            const userId = response.data.userId;
 
-            if (role === 'driver' && carDetails) {
+            if (role === 'DRIVER' && carDetails) {
                 const carData = { ...carDetails, driverId: userId };
                 await addCar(carData);
             }
@@ -88,8 +89,8 @@ const Signup = ({ onSignupSuccess }) => {
                             label="Passenger"
                             id="passenger"
                             name="role"
-                            value="passenger"
-                            checked={role === 'passenger'}
+                            value="PASSENGER"
+                            checked={role === 'PASSENGER'}
                             onChange={(e) => setRole(e.target.value)}
                         />
                         <Form.Check
@@ -97,13 +98,13 @@ const Signup = ({ onSignupSuccess }) => {
                             label="Driver"
                             id="driver"
                             name="role"
-                            value="driver"
-                            checked={role === 'driver'}
+                            value="DRIVER"
+                            checked={role === 'DRIVER'}
                             onChange={(e) => setRole(e.target.value)}
                         />
                     </div>
                 </Form.Group>
-                {role === 'driver' && (
+                {role === 'DRIVER' && (
                     <AddCarForm onCarDetailsChange={setCarDetails} />
                 )}
                 <Button className="mt-4 animated-button" variant="primary" type="submit" size="lg">

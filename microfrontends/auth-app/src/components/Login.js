@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin } from '@react-oauth/google';
 import { Form, Button, Alert, Container } from 'react-bootstrap';
-import { loginUser } from '../api';
-import { setToken } from '../utils/auth';
+import { setTokenCookie } from '../utils/auth';
+import {jwtDecode} from 'jwt-decode';
+import { loginUser, getUserRole } from '../api';
+
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -14,27 +16,41 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await loginUser(username, password);
-            // const { token } = response.data.jwt;
-            // setToken(token);
             setMessage(`Welcome ${username}`);
-            const redirectUrl = username === 'Genti' ? 'http://localhost:3002' : 'http://localhost:3001';
+            const token = response.data.token;
+            const redirectUrl = await getUserRole(username) === 'PASSENGER' ? `http://localhost:3002?token=${token}` : `http://localhost:3001?token=${token}`;
             window.location.href = redirectUrl;
         } catch (error) {
+            console.error('Login error:', error);
             setMessage('Login failed. Please check your credentials.');
         }
     };
 
-    const handleGoogleSuccess = async (response) => {
-        const serverResponse = await axios.post('http://localhost:3001/google-login', { token: response.credential });
-        const { token } = serverResponse.data;
-        setToken(token);
-        window.location.href = `http://localhost:3001`;
-        setMessage('Login with Google successful!');
-    };
+    const googleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            console.log('Google Login Success:', tokenResponse);
 
-    const handleGoogleError = () => {
-        setMessage('Login with Google failed.');
-    };
+            const accessToken = tokenResponse.access_token;
+            try {
+                const serverResponse = await axios.post('http://localhost:8765/USER/api/auth/google-login', { accessToken });
+                console.log('Google login server response:', serverResponse);
+                const jwtToken = serverResponse.data.token;
+                setTokenCookie(jwtToken);
+
+                const decodedToken = jwtDecode(jwtToken);
+                const email = decodedToken.email;
+                setMessage(`Login with Google successful! Welcome ${email}`);
+
+                window.location.href = `http://localhost:3002?token=${jwtToken}`;
+            } catch (error) {
+                console.error('Google login error:', error);
+                setMessage('Login with Google failed. Please ensure you have an account.');
+            }
+        },
+        onError: () => {
+            setMessage('Login with Google failed.');
+        }
+    });
 
     return (
         <Container className="login-container border p-4 rounded bg-light shadow animated-container">
@@ -70,10 +86,9 @@ const Login = () => {
             <hr />
             <h3 className="text-center">Or login with Google</h3>
             <div className="d-flex justify-content-center">
-                <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                />
+                <Button onClick={() => googleLogin()} variant="outline-primary">
+                    Login with Google
+                </Button>
             </div>
         </Container>
     );
